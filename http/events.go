@@ -24,13 +24,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+	"github.com/r3labs/sse/v2"
+	"github.com/rs/zerolog"
+
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
-	"github.com/r3labs/sse/v2"
-	"github.com/rs/zerolog"
 )
 
 // Events feeds requested events with the given topics to the supplied handler.
@@ -159,6 +160,22 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			return
 		}
 		event.Data = contributionAndProofEvent
+	case "light_client_finality_update":
+		update := &api.LightClientFinalityUpdate{}
+		err := json.Unmarshal(msg.Data, update)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
+			return
+		}
+		event.Data = update
+	case "light_client_optimistic_update":
+		update := &api.LightClientOptimisticUpdate{}
+		err := json.Unmarshal(msg.Data, update)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
+			return
+		}
+		event.Data = update
 	case "":
 		// Used as keepalive.  Ignore.
 		return

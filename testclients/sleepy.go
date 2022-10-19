@@ -447,3 +447,33 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 	}
 	return next.GenesisTime(ctx)
 }
+
+// LightClientBootstrap provides the light client bootstrap of a given block ID.
+func (s *Sleepy) LightClientBootstrap(ctx context.Context, blockID string) (*apiv1.LightClientBootstrap, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+	return next.LightClientBootstrap(ctx, blockID)
+}
+
+// LightClientFinalityUpdate provides the light client finality_update.
+func (s *Sleepy) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightClientFinalityUpdate, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+	return next.LightClientFinalityUpdate(ctx)
+}
+
+// LightClientOptimisticUpdate provides the light client optimistic_update.
+func (s *Sleepy) LightClientOptimisticUpdate(ctx context.Context) (*apiv1.LightClientOptimisticUpdate, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, errors.New("next does not support this call")
+	}
+	return next.LightClientOptimisticUpdate(ctx)
+}

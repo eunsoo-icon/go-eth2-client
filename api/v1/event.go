@@ -17,9 +17,10 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
-	"github.com/pkg/errors"
 )
 
 // Event is the container for events sent from the API.
@@ -32,13 +33,15 @@ type Event struct {
 
 // SupportedEventTopics is a map of supported event topics.
 var SupportedEventTopics = map[string]bool{
-	"attestation":            true,
-	"block":                  true,
-	"chain_reorg":            true,
-	"finalized_checkpoint":   true,
-	"head":                   true,
-	"voluntary_exit":         true,
-	"contribution_and_proof": true,
+	"attestation":                    true,
+	"block":                          true,
+	"chain_reorg":                    true,
+	"finalized_checkpoint":           true,
+	"head":                           true,
+	"voluntary_exit":                 true,
+	"contribution_and_proof":         true,
+	"light_client_finality_update":   true,
+	"light_client_optimistic_update": true,
 }
 
 // eventJSON is the spec representation of the struct.
@@ -96,6 +99,10 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 		e.Data = &phase0.SignedVoluntaryExit{}
 	case "contribution_and_proof":
 		e.Data = &altair.SignedContributionAndProof{}
+	case "light_client_finality_update":
+		e.Data = &LightClientFinalityUpdate{}
+	case "light_client_optimistic_update":
+		e.Data = &LightClientOptimisticUpdate{}
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}

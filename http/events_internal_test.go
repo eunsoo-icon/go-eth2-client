@@ -20,11 +20,12 @@ import (
 	"testing"
 	"time"
 
-	client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/r3labs/sse/v2"
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
+
+	client "github.com/attestantio/go-eth2-client"
+	api "github.com/attestantio/go-eth2-client/api/v1"
 )
 
 // timeout for tests.
@@ -130,6 +131,24 @@ func TestEventHandler(t *testing.T) {
 			message: &sse.Event{
 				Event: []byte("contribution_and_proof"),
 				Data:  []byte(`{"message":{"aggregator_index":"355177","contribution":{"slot":"4095970","beacon_block_root":"0xfe17cc29bb937740eead4b84716751b00e361891dae7c8f0e98f4deb5f753cbc","subcommittee_index":"0","aggregation_bits":"0xffffffffffffffffffffdfffffffffff","signature":"0x926e8fbf2b8599f76a42e2dd02b954853d3841577a0c68303fb9a5690f7973e95454bc1df03118d53c80e3cf13dc33490f2516aefb4cb7766a724a10dd0536811ec43b7e5f08442ef7dbc072b4b484ea1acde78e5aae8d636b06dd18677c535b"},"selection_proof":"0x84c805b21a40315dc19ea89e6d64d8f5e913d5e003a813d74a23f16add72250791a950b7508e2ea69adab8169c2800b70d26fea4cdb51f1fb96d939baaa44567eb9e96d2021799478fd3f557326a62060215be95465fcc9c49f67dd8685a20bc"},"signature":"0x8093efce898e36cab5ab2b198a48046d029b36909a29ec33ca7075f389133288c4d7e13cf3e20396612050d4aebe9212154fd5a2be4bf356e6191600d65906d5c404bd46c95ae20fe4bc5e18c6e2808c97a4572f995bf90db8aaf3fd84fb87ac"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "LightClientFinalityUpdateGood",
+			message: &sse.Event{
+				Event: []byte("light_client_finality_update"),
+				Data:  []byte(`{"attested_header":{"slot":"4957824","proposer_index":"102015","parent_root":"0x8b8c9f91b6d14a06098db07040dfc46c4ab21f55d213559f6f02636ff15977d5","state_root":"0x6f135bf53593ce342bbfaff7278613b7a8c3709b065b612e8b47784f76ae4da0","body_root":"0x61595997dfea35dce29332455b260377ab1d6a788d49269372ad008e0b78215b"},"finalized_header":{"slot":"4957760","proposer_index":"346845","parent_root":"0xcbde4e99a232e6df7a6d8ef0ec495558e5d282f926ab4e5048c9af321d5fda72","state_root":"0xd357a7b09ead054ac22786ff45a3459f067ac1795d4a149f6d8e5edece964501","body_root":"0xd69dc5cde1f986f74dd8330bb055154ce6d098857e17e927362c47a343e18f3f"},"finality_branch":["0x325d020000000000000000000000000000000000000000000000000000000000","0x4ea8e197f4d8cb99074425bdfe07eae17c31a2117cfd7af9257c371edbeb0dbf","0xf40e5559be4761afc95bfaec1b87116a0fcd09e3c01f1d5fbc8befc0704ac1f2","0x91e25054f15600fd48b054361e570ff35425e143392ea3ad566d3cb0f8ee6a2f","0x929ee3ff1bce3066825611a03e03b89e94046d8f158bbf24969074d3fe26143f","0x365a7a573241a9a5b278f33d46242f8177a77c4467cb750d50a9943773200a09"],"sync_aggregate":{"sync_committee_bits":"0xffffefffeffffbfffff9efffffffbffffffdf7ff7ffffffbdffffdffffffffffffff7ffffeffffffffffffffbffffffefffffbffff7f7fffffffffffffffeeff","sync_committee_signature":"0xa63cd88b564d6db06fb3a3d953ddddd9d0e8d6501e2bc9f8df12b27b490de6a98fc537f5551289fc6cc954d80afa63d10bf5f14a42aa6c94a5ee1df6480c48c89a8bd1c8d785f38a09a45e16feb584e5b8417b72202d1c520f8231229f38cbc3"},"signature_slot": "4957825"}`),
+			},
+			handler: handler,
+			handled: true,
+		},
+		{
+			name: "LightClientOptimisticUpdateGood",
+			message: &sse.Event{
+				Event: []byte("light_client_optimistic_update"),
+				Data:  []byte(`{"attested_header":{"slot":"4957842","proposer_index":"11256","parent_root":"0xfc8390a8789b7fefcf950e009d493779f53e422b72a6816b98c35b1024d09c40","state_root":"0x6504e27e01f50f9b86702abe6e06fe656b722c95204d1f97e2204de63a672d18","body_root":"0x31b30a8f4d053fe117f3c9571d9989ef597cf04f178f0034e0bdd9139365f90d"},"sync_aggregate":{"sync_committee_bits":"0xffffffffffffffffffffffffffffffffffffffff7ffffffffffffffefffffffffbfffffffeffffefffffffffffffffffffffffffffffffffffffdfffffffffff","sync_committee_signature":"0x9300e6e2359d1fd4a96623635d0dc1315623cdf6d5b3406efadee3e55a3907ec27acec609eb18658270fcc528e1eb8ae0fa2e3440ce3dabc814fae612af90ddef6f0a97f471e0eeba47d3d0c807873d5d9efed0f6d84c6f2f0a7cba299d88de6"},"signature_slot":"4957843"}`),
 			},
 			handler: handler,
 			handled: true,

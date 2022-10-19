@@ -377,6 +377,18 @@ type VoluntaryExitSubmitter interface {
 	SubmitVoluntaryExit(ctx context.Context, voluntaryExit *phase0.SignedVoluntaryExit) error
 }
 
+// LightClientProvider is the interface for providing light client information.
+type LightClientProvider interface {
+	// LightClientBootstrap provides the light client bootstrap of a given block ID.
+	LightClientBootstrap(ctx context.Context, blockID string) (*apiv1.LightClientBootstrap, error)
+
+	// LightClientFinalityUpdate provides the light client finality_update.
+	LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightClientFinalityUpdate, error)
+
+	// LightClientOptimisticUpdate provides the light client optimistic_update.
+	LightClientOptimisticUpdate(ctx context.Context) (*apiv1.LightClientOptimisticUpdate, error)
+}
+
 //
 // Local extensions
 //

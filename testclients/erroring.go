@@ -678,3 +678,39 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context, stateID string) (*phase0
 	}
 	return next.BeaconStateRoot(ctx, stateID)
 }
+
+// LightClientBootstrap provides the light client bootstrap of a given block ID.
+func (s *Erroring) LightClientBootstrap(ctx context.Context, blockID string) (*apiv1.LightClientBootstrap, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.LightClientBootstrap(ctx, blockID)
+}
+
+// LightClientFinalityUpdate provides the light client finality_update
+func (s *Erroring) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightClientFinalityUpdate, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.LightClientFinalityUpdate(ctx)
+}
+
+// LightClientOptimisticUpdate provides the light client optimistic_update.
+func (s *Erroring) LightClientOptimisticUpdate(ctx context.Context) (*apiv1.LightClientOptimisticUpdate, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return nil, err
+	}
+	next, isNext := s.next.(consensusclient.LightClientProvider)
+	if !isNext {
+		return nil, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.LightClientOptimisticUpdate(ctx)
+}

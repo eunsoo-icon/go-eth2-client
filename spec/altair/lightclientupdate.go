@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package altair
 
 import (
 	"encoding/hex"
@@ -22,29 +22,28 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // LightClientUpdate is the data providing light client update
 type LightClientUpdate struct {
 	AttestedHeader          *phase0.BeaconBlockHeader // The beacon block header that is attested to by the sync committee
-	NextSyncCommittee       *altair.SyncCommittee     // Next sync committee corresponding to `attested_header`
+	NextSyncCommittee       *SyncCommittee            // Next sync committee corresponding to `attested_header`
 	NextSyncCommitteeBranch [][]byte                  `ssz-size:"5,32"`
 	FinalizedHeader         *phase0.BeaconBlockHeader // The finalized beacon block header attested to by Merkle branch
 	FinalityBranch          [][]byte                  `ssz-size:"6,32"`
-	SyncAggregate           *altair.SyncAggregate     // Sync committee aggregate signature
+	SyncAggregate           *SyncAggregate            // Sync committee aggregate signature
 	SignatureSlot           phase0.Slot               // Slot at which the aggregate signature was created (untrusted)
 }
 
 // lightClientUpdateJSON is the spec representation of the struct.
 type lightClientUpdateJSON struct {
 	AttestedHeader          *phase0.BeaconBlockHeader `json:"attested_header"`
-	NextSyncCommittee       *altair.SyncCommittee     `json:"next_sync_committee"`
+	NextSyncCommittee       *SyncCommittee            `json:"next_sync_committee"`
 	NextSyncCommitteeBranch []string                  `json:"next_sync_committee_branch"`
 	FinalizedHeader         *phase0.BeaconBlockHeader `json:"finalized_header"`
 	FinalityBranch          []string                  `json:"finality_branch"`
-	SyncAggregate           *altair.SyncAggregate     `json:"sync_aggregate"`
+	SyncAggregate           *SyncAggregate            `json:"sync_aggregate"`
 	SignatureSlot           string                    `json:"signature_slot"`
 }
 

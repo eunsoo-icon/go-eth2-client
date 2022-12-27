@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1_test
+package altair_test
 
 import (
 	"encoding/json"
@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"gotest.tools/assert"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 )
 
 func TestLightClientUpdatesJSON(t *testing.T) {
@@ -47,7 +47,7 @@ func TestLightClientUpdatesJSON(t *testing.T) {
 		{
 			name:  "JSONBad",
 			input: []byte("[]"),
-			err:   "invalid JSON: json: cannot unmarshal array into Go value of type v1.lightClientUpdateJSON",
+			err:   "invalid JSON: json: cannot unmarshal array into Go value of type altair.lightClientUpdateJSON",
 		},
 		{
 			name:  "AttestedHeaderMissing",
@@ -152,7 +152,7 @@ func TestLightClientUpdatesJSON(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var res api.LightClientUpdate
+			var res altair.LightClientUpdate
 			err := json.Unmarshal(test.input, &res)
 			if test.err != "" {
 				require.EqualError(t, err, test.err)

@@ -17,11 +17,11 @@ import (
 	"context"
 
 	consensusclient "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 )
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
-func (s *Service) LightClientBootstrap(ctx context.Context, blockID string) (*api.LightClientBootstrap, error) {
+func (s *Service) LightClientBootstrap(ctx context.Context, blockID string) (*altair.LightClientBootstrap, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		bootstrap, err := client.(consensusclient.LightClientProvider).LightClientBootstrap(ctx, blockID)
 		if err != nil {
@@ -35,11 +35,11 @@ func (s *Service) LightClientBootstrap(ctx context.Context, blockID string) (*ap
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.LightClientBootstrap), nil
+	return res.(*altair.LightClientBootstrap), nil
 }
 
 // LightClientUpdates provides the light client updates of a given start_period and count
-func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) ([]*api.LightClientUpdate, error) {
+func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) ([]*altair.LightClientUpdate, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		updates, err := client.(consensusclient.LightClientProvider).LightClientUpdates(ctx, start, count)
 		if err != nil {
@@ -53,11 +53,11 @@ func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) (
 	if res == nil {
 		return nil, nil
 	}
-	return res.([]*api.LightClientUpdate), nil
+	return res.([]*altair.LightClientUpdate), nil
 }
 
 // LightClientFinalityUpdate provides the light client finality_update
-func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*api.LightClientFinalityUpdate, error) {
+func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		bootstrap, err := client.(consensusclient.LightClientProvider).LightClientFinalityUpdate(ctx)
 		if err != nil {
@@ -71,11 +71,11 @@ func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*api.LightClie
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.LightClientFinalityUpdate), nil
+	return res.(*altair.LightClientFinalityUpdate), nil
 }
 
 // LightClientOptimisticUpdate provides the light client optimistic_update
-func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*api.LightClientOptimisticUpdate, error) {
+func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
 	res, err := s.doCall(ctx, func(ctx context.Context, client consensusclient.Service) (interface{}, error) {
 		bootstrap, err := client.(consensusclient.LightClientProvider).LightClientOptimisticUpdate(ctx)
 		if err != nil {
@@ -89,5 +89,5 @@ func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*api.LightCl
 	if res == nil {
 		return nil, nil
 	}
-	return res.(*api.LightClientOptimisticUpdate), nil
+	return res.(*altair.LightClientOptimisticUpdate), nil
 }

@@ -680,7 +680,7 @@ func (s *Erroring) BeaconStateRoot(ctx context.Context, stateID string) (*phase0
 }
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
-func (s *Erroring) LightClientBootstrap(ctx context.Context, blockID string) (*apiv1.LightClientBootstrap, error) {
+func (s *Erroring) LightClientBootstrap(ctx context.Context, blockID string) (*altair.LightClientBootstrap, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -692,7 +692,7 @@ func (s *Erroring) LightClientBootstrap(ctx context.Context, blockID string) (*a
 }
 
 // LightClientFinalityUpdate provides the light client finality_update
-func (s *Erroring) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightClientFinalityUpdate, error) {
+func (s *Erroring) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}
@@ -704,7 +704,7 @@ func (s *Erroring) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightC
 }
 
 // LightClientOptimisticUpdate provides the light client optimistic_update.
-func (s *Erroring) LightClientOptimisticUpdate(ctx context.Context) (*apiv1.LightClientOptimisticUpdate, error) {
+func (s *Erroring) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
 	if err := s.maybeError(ctx); err != nil {
 		return nil, err
 	}

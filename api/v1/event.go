@@ -100,9 +100,9 @@ func (e *Event) UnmarshalJSON(input []byte) error {
 	case "contribution_and_proof":
 		e.Data = &altair.SignedContributionAndProof{}
 	case "light_client_finality_update":
-		e.Data = &LightClientFinalityUpdate{}
+		e.Data = &altair.LightClientFinalityUpdate{}
 	case "light_client_optimistic_update":
-		e.Data = &LightClientOptimisticUpdate{}
+		e.Data = &altair.LightClientOptimisticUpdate{}
 	default:
 		return fmt.Errorf("unsupported event topic %s", eventJSON.Topic)
 	}

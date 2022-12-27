@@ -24,6 +24,7 @@ import (
 	"github.com/attestantio/go-eth2-client/api"
 	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -449,7 +450,7 @@ func (s *Sleepy) GenesisTime(ctx context.Context) (time.Time, error) {
 }
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
-func (s *Sleepy) LightClientBootstrap(ctx context.Context, blockID string) (*apiv1.LightClientBootstrap, error) {
+func (s *Sleepy) LightClientBootstrap(ctx context.Context, blockID string) (*altair.LightClientBootstrap, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.LightClientProvider)
 	if !isNext {
@@ -459,7 +460,7 @@ func (s *Sleepy) LightClientBootstrap(ctx context.Context, blockID string) (*api
 }
 
 // LightClientFinalityUpdate provides the light client finality_update.
-func (s *Sleepy) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightClientFinalityUpdate, error) {
+func (s *Sleepy) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.LightClientProvider)
 	if !isNext {
@@ -469,7 +470,7 @@ func (s *Sleepy) LightClientFinalityUpdate(ctx context.Context) (*apiv1.LightCli
 }
 
 // LightClientOptimisticUpdate provides the light client optimistic_update.
-func (s *Sleepy) LightClientOptimisticUpdate(ctx context.Context) (*apiv1.LightClientOptimisticUpdate, error) {
+func (s *Sleepy) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
 	s.sleep(ctx)
 	next, isNext := s.next.(consensusclient.LightClientProvider)
 	if !isNext {

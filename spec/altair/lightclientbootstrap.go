@@ -11,7 +11,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package v1
+package altair
 
 import (
 	"encoding/hex"
@@ -21,21 +21,20 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // LightClientBootstrap is the data providing light client bootstrap
 type LightClientBootstrap struct {
 	Header                     *phase0.BeaconBlockHeader
-	CurrentSyncCommittee       *altair.SyncCommittee
+	CurrentSyncCommittee       *SyncCommittee
 	CurrentSyncCommitteeBranch [][]byte `ssz-size:"5,32"`
 }
 
 // lightClientBootstrapJSON is the spec representation of the struct.
 type lightClientBootstrapJSON struct {
 	Header                     *phase0.BeaconBlockHeader `json:"header"`
-	CurrentSyncCommittee       *altair.SyncCommittee     `json:"current_sync_committee"`
+	CurrentSyncCommittee       *SyncCommittee            `json:"current_sync_committee"`
 	CurrentSyncCommitteeBranch []string                  `json:"current_sync_committee_branch"`
 }
 

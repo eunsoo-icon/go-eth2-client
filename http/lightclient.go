@@ -20,16 +20,16 @@ import (
 
 	"github.com/pkg/errors"
 
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 type lightClientBootstrapJSON struct {
-	Data *api.LightClientBootstrap `json:"data"`
+	Data *altair.LightClientBootstrap `json:"data"`
 }
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
-func (s *Service) LightClientBootstrap(ctx context.Context, blockRoot phase0.Root) (*api.LightClientBootstrap, error) {
+func (s *Service) LightClientBootstrap(ctx context.Context, blockRoot phase0.Root) (*altair.LightClientBootstrap, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/bootstrap/%#x", blockRoot))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client bootstrap")
@@ -46,13 +46,12 @@ func (s *Service) LightClientBootstrap(ctx context.Context, blockRoot phase0.Roo
 	return resp.Data, nil
 }
 
-type lightClientUpdatesJSON struct {
-	Data *api.LightClientUpdate `json:"data"`
-}
-
-// LightClientUpdates provides the light client
-func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) (*api.LightClientUpdate, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", start, count))
+// LightClientUpdates provides the light client update instances in the sync committee period range [startPeriod, startPeriod + count]
+func (s *Service) LightClientUpdates(ctx context.Context, startPeriod, count uint64) ([]*altair.LightClientUpdate, error) {
+	respBodyReader, err := s.get(
+		ctx,
+		fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", startPeriod, count),
+	)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client update")
 	}
@@ -60,20 +59,20 @@ func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) (
 		return nil, nil
 	}
 
-	var resp lightClientUpdatesJSON
+	var resp []*altair.LightClientUpdate
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client update")
 	}
 
-	return resp.Data, nil
+	return resp, nil
 }
 
 type lightClientFinalityUpdateJSON struct {
-	Data *api.LightClientFinalityUpdate `json:"data"`
+	Data *altair.LightClientFinalityUpdate `json:"data"`
 }
 
-// LightClientFinalityUpdate provides the light client finality_update
-func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*api.LightClientFinalityUpdate, error) {
+// LightClientFinalityUpdate provides the latest light client finality_update
+func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/finality_update/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client finality_update")
@@ -91,11 +90,11 @@ func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*api.LightClie
 }
 
 type lightClientOptimisticUpdateJSON struct {
-	Data *api.LightClientOptimisticUpdate `json:"data"`
+	Data *altair.LightClientOptimisticUpdate `json:"data"`
 }
 
-// LightClientOptimisticUpdate provides the light client optimistic_update
-func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*api.LightClientOptimisticUpdate, error) {
+// LightClientOptimisticUpdate provides the latest light client optimistic_update
+func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
 	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/optimistic_update/"))
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client optimistic_update")

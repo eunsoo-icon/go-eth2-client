@@ -46,6 +46,10 @@ func (s *Service) LightClientBootstrap(ctx context.Context, blockRoot phase0.Roo
 	return resp.Data, nil
 }
 
+type lightClientUpdateJSON struct {
+	Data *altair.LightClientUpdate `json:"data"`
+}
+
 // LightClientUpdates provides the light client update instances in the sync committee period range [startPeriod, startPeriod + count]
 func (s *Service) LightClientUpdates(ctx context.Context, startPeriod, count uint64) ([]*altair.LightClientUpdate, error) {
 	respBodyReader, err := s.get(
@@ -53,18 +57,24 @@ func (s *Service) LightClientUpdates(ctx context.Context, startPeriod, count uin
 		fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", startPeriod, count),
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon light client update")
+		return nil, errors.Wrap(err, "failed to request beacon light client updates")
 	}
 	if respBodyReader == nil {
 		return nil, nil
 	}
 
-	var resp []*altair.LightClientUpdate
+	var resp []lightClientUpdateJSON
 	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
-		return nil, errors.Wrap(err, "failed to parse beacon light client update")
+		return nil, errors.Wrap(err, "failed to parse beacon light client updates")
 	}
 
-	return resp, nil
+	size := len(resp)
+	ret := make([]*altair.LightClientUpdate, size, size)
+	for i := 0; i < size; i++ {
+		ret[i] = resp[i].Data
+	}
+
+	return ret, nil
 }
 
 type lightClientFinalityUpdateJSON struct {

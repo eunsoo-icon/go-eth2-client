@@ -161,21 +161,25 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		}
 		event.Data = contributionAndProofEvent
 	case "light_client_finality_update":
-		update := &altair.LightClientFinalityUpdate{}
+		//update := &altair.LightClientFinalityUpdate{}
+		update := &eventLightClientFinalityUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
 			return
 		}
-		event.Data = update
+		//event.Data = update
+		event.Data = update.Data
 	case "light_client_optimistic_update":
-		update := &altair.LightClientOptimisticUpdate{}
+		//update := &altair.LightClientOptimisticUpdate{}
+		update := &eventLightClientOptimisticUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
 			return
 		}
-		event.Data = update
+		//event.Data = update
+		event.Data = update.Data
 	case "":
 		// Used as keepalive.  Ignore.
 		return
@@ -184,4 +188,11 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		return
 	}
 	handler(event)
+}
+
+type eventLightClientFinalityUpdateJSON struct {
+	Data *altair.LightClientFinalityUpdate `json:"data"`
+}
+type eventLightClientOptimisticUpdateJSON struct {
+	Data *altair.LightClientOptimisticUpdate `json:"data"`
 }

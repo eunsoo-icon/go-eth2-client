@@ -27,7 +27,7 @@ import (
 func TestLightClientOptimisticUpdateJSON(t *testing.T) {
 	const (
 		format        = `{"attested_header":%s,"sync_aggregate":%s,"signature_slot":%s}`
-		header        = `{"slot":"4943744","proposer_index":"222870","parent_root":"0x0c594acb2c7ec3564590fd2feb6724cfcf786faf51fe2a284154516c2903c153","state_root":"0x237962d02698b2f5f37f3a7c43dfae0e2fe28e103225237bc7f09938c8527eaa","body_root":"0xff42d5726526628ce27c4ca89172ccf5c562adbfec64c22d494b6f8bd03dc034"}`
+		header        = `{"beacon":{"slot":"4943744","proposer_index":"222870","parent_root":"0x0c594acb2c7ec3564590fd2feb6724cfcf786faf51fe2a284154516c2903c153","state_root":"0x237962d02698b2f5f37f3a7c43dfae0e2fe28e103225237bc7f09938c8527eaa","body_root":"0xff42d5726526628ce27c4ca89172ccf5c562adbfec64c22d494b6f8bd03dc034"}}`
 		syncAggregate = `{"sync_committee_bits":"0xfffffffffffbffffffffffffffffffffffffffffffffffff7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff","sync_committee_signature":"0x97e006ecbe9df2f082eb450e1c07ace045da0d4e367f453170bfb32911e72fc9f08237d348e99b3500531c8cba770fc119d844c22950c094d860cfa784ba237debe681e55875994a75c72689d9e289f72c8bb7559ae91b3788e5e769aee0705a"}`
 		slot          = `"1234"`
 	)

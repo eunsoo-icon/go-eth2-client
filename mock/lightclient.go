@@ -17,13 +17,12 @@ import (
 	"context"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
 func (s *Service) LightClientBootstrap(ctx context.Context, blockID string) (*altair.LightClientBootstrap, error) {
 	return &altair.LightClientBootstrap{
-		Header:                     &phase0.BeaconBlockHeader{},
+		Header:                     &altair.LightClientHeader{},
 		CurrentSyncCommittee:       &altair.SyncCommittee{},
 		CurrentSyncCommitteeBranch: [][]byte{},
 	}, nil
@@ -33,10 +32,10 @@ func (s *Service) LightClientBootstrap(ctx context.Context, blockID string) (*al
 func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) ([]*altair.LightClientUpdate, error) {
 	return []*altair.LightClientUpdate{
 		{
-			AttestedHeader:          &phase0.BeaconBlockHeader{},
+			AttestedHeader:          &altair.LightClientHeader{},
 			NextSyncCommittee:       &altair.SyncCommittee{},
 			NextSyncCommitteeBranch: [][]byte{},
-			FinalizedHeader:         &phase0.BeaconBlockHeader{},
+			FinalizedHeader:         &altair.LightClientHeader{},
 			FinalityBranch:          [][]byte{},
 			SyncAggregate:           &altair.SyncAggregate{},
 		},
@@ -46,8 +45,8 @@ func (s *Service) LightClientUpdates(ctx context.Context, start, count uint64) (
 // LightClientFinalityUpdate provides the light client finality_update
 func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
 	return &altair.LightClientFinalityUpdate{
-		AttestedHeader:  &phase0.BeaconBlockHeader{},
-		FinalizedHeader: &phase0.BeaconBlockHeader{},
+		AttestedHeader:  &altair.LightClientHeader{},
+		FinalizedHeader: &altair.LightClientHeader{},
 		FinalityBranch:  [][]byte{},
 		SyncAggregate:   &altair.SyncAggregate{},
 	}, nil
@@ -56,7 +55,7 @@ func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*altair.LightC
 // LightClientOptimisticUpdate provides the light client optimistic_update
 func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
 	return &altair.LightClientOptimisticUpdate{
-		AttestedHeader: &phase0.BeaconBlockHeader{},
+		AttestedHeader: &altair.LightClientHeader{},
 		SyncAggregate:  &altair.SyncAggregate{},
 	}, nil
 }

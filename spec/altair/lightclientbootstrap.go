@@ -20,22 +20,20 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
 // LightClientBootstrap is the data providing light client bootstrap
 type LightClientBootstrap struct {
-	Header                     *phase0.BeaconBlockHeader
+	Header                     *LightClientHeader
 	CurrentSyncCommittee       *SyncCommittee
 	CurrentSyncCommitteeBranch [][]byte `ssz-size:"5,32"`
 }
 
 // lightClientBootstrapJSON is the spec representation of the struct.
 type lightClientBootstrapJSON struct {
-	Header                     *phase0.BeaconBlockHeader `json:"header"`
-	CurrentSyncCommittee       *SyncCommittee            `json:"current_sync_committee"`
-	CurrentSyncCommitteeBranch []string                  `json:"current_sync_committee_branch"`
+	Header                     *LightClientHeader `json:"header"`
+	CurrentSyncCommittee       *SyncCommittee     `json:"current_sync_committee"`
+	CurrentSyncCommitteeBranch []string           `json:"current_sync_committee_branch"`
 }
 
 // MarshalJSON implements json.Marshaler.

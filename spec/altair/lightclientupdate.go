@@ -27,24 +27,24 @@ import (
 
 // LightClientUpdate is the data providing light client update
 type LightClientUpdate struct {
-	AttestedHeader          *phase0.BeaconBlockHeader // The beacon block header that is attested to by the sync committee
-	NextSyncCommittee       *SyncCommittee            // Next sync committee corresponding to `attested_header`
-	NextSyncCommitteeBranch [][]byte                  `ssz-size:"5,32"`
-	FinalizedHeader         *phase0.BeaconBlockHeader // The finalized beacon block header attested to by Merkle branch
-	FinalityBranch          [][]byte                  `ssz-size:"6,32"`
-	SyncAggregate           *SyncAggregate            // Sync committee aggregate signature
-	SignatureSlot           phase0.Slot               // Slot at which the aggregate signature was created (untrusted)
+	AttestedHeader          *LightClientHeader // Header attested to by the sync committee
+	NextSyncCommittee       *SyncCommittee     // Next sync committee corresponding to `AttestedHeader.Beacon.StateRoot`
+	NextSyncCommitteeBranch [][]byte           `ssz-size:"5,32"`
+	FinalizedHeader         *LightClientHeader // Finalized header corresponding to `AttestedHeader.Beacon.StateRoot`
+	FinalityBranch          [][]byte           `ssz-size:"6,32"`
+	SyncAggregate           *SyncAggregate     // Sync committee aggregate signature
+	SignatureSlot           phase0.Slot        // Slot at which the aggregate signature was created (untrusted)
 }
 
 // lightClientUpdateJSON is the spec representation of the struct.
 type lightClientUpdateJSON struct {
-	AttestedHeader          *phase0.BeaconBlockHeader `json:"attested_header"`
-	NextSyncCommittee       *SyncCommittee            `json:"next_sync_committee"`
-	NextSyncCommitteeBranch []string                  `json:"next_sync_committee_branch"`
-	FinalizedHeader         *phase0.BeaconBlockHeader `json:"finalized_header"`
-	FinalityBranch          []string                  `json:"finality_branch"`
-	SyncAggregate           *SyncAggregate            `json:"sync_aggregate"`
-	SignatureSlot           string                    `json:"signature_slot"`
+	AttestedHeader          *LightClientHeader `json:"attested_header"`
+	NextSyncCommittee       *SyncCommittee     `json:"next_sync_committee"`
+	NextSyncCommitteeBranch []string           `json:"next_sync_committee_branch"`
+	FinalizedHeader         *LightClientHeader `json:"finalized_header"`
+	FinalityBranch          []string           `json:"finality_branch"`
+	SyncAggregate           *SyncAggregate     `json:"sync_aggregate"`
+	SignatureSlot           string             `json:"signature_slot"`
 }
 
 // MarshalJSON implements json.Marshaler.

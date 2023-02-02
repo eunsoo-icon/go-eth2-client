@@ -25,16 +25,16 @@ import (
 
 // LightClientOptimisticUpdate is the data providing light client finality update
 type LightClientOptimisticUpdate struct {
-	AttestedHeader *phase0.BeaconBlockHeader // The beacon block header that is attested to by the sync committee
-	SyncAggregate  *SyncAggregate            // Sync committee aggregate signature
-	SignatureSlot  phase0.Slot               // Slot at which the aggregate signature was created (untrusted)
+	AttestedHeader *LightClientHeader // The beacon block header that is attested to by the sync committee
+	SyncAggregate  *SyncAggregate     // Sync committee aggregate signature
+	SignatureSlot  phase0.Slot        // Slot at which the aggregate signature was created (untrusted)
 }
 
 // lightClientOptimisticUpdateJSON is the spec representation of the struct.
 type lightClientOptimisticUpdateJSON struct {
-	AttestedHeader *phase0.BeaconBlockHeader `json:"attested_header"`
-	SyncAggregate  *SyncAggregate            `json:"sync_aggregate"`
-	SignatureSlot  string                    `json:"signature_slot"`
+	AttestedHeader *LightClientHeader `json:"attested_header"`
+	SyncAggregate  *SyncAggregate     `json:"sync_aggregate"`
+	SignatureSlot  string             `json:"signature_slot"`
 }
 
 // MarshalJSON implements json.Marshaler.

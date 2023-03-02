@@ -255,6 +255,27 @@ func (v *VersionedSignedBeaconBlock) ProposerSlashings() ([]*phase0.ProposerSlas
 	}
 }
 
+func (v *VersionedSignedBeaconBlock) BlockNumber() (uint64, error) {
+	switch v.Version {
+	case DataVersionPhase0:
+		return 0, errors.New("not support at phase0")
+	case DataVersionAltair:
+		return 0, errors.New("not support at altair")
+	case DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, errors.New("no bellatrix block body")
+		}
+		return v.Bellatrix.Message.Body.ExecutionPayload.BlockNumber, nil
+	case DataVersionCapella:
+		if v.Capella == nil {
+			return 0, errors.New("no capella block body")
+		}
+		return v.Capella.Message.Body.ExecutionPayload.BlockNumber, nil
+	default:
+		return 0, errors.New("unknown version")
+	}
+}
+
 // String returns a string version of the structure.
 func (v *VersionedSignedBeaconBlock) String() string {
 	switch v.Version {

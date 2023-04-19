@@ -26,6 +26,7 @@ type parameters struct {
 	timeout         time.Duration
 	indexChunkSize  int
 	pubKeyChunkSize int
+	extraHeaders    map[string]string
 }
 
 // Parameter is the interface for service parameters.
@@ -74,6 +75,13 @@ func WithPubKeyChunkSize(pubKeyChunkSize int) Parameter {
 	})
 }
 
+// WithExtraHeaders sets additional headers to be sent with each HTTP request.
+func WithExtraHeaders(headers map[string]string) Parameter {
+	return parameterFunc(func(p *parameters) {
+		p.extraHeaders = headers
+	})
+}
+
 // parseAndCheckParameters parses and checks parameters to ensure that mandatory parameters are present and correct.
 func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 	parameters := parameters{
@@ -81,6 +89,7 @@ func parseAndCheckParameters(params ...Parameter) (*parameters, error) {
 		timeout:         2 * time.Second,
 		indexChunkSize:  -1,
 		pubKeyChunkSize: -1,
+		extraHeaders:    make(map[string]string),
 	}
 	for _, p := range params {
 		if params != nil {

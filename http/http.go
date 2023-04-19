@@ -18,23 +18,14 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/pkg/errors"
 )
-
-func init() {
-	// We seed math.rand here so that we can obtain different IDs for requests.
-	// This is purely used as a way to match request and response entries in logs, so there is no
-	// requirement for this to cryptographically secure.
-	rand.Seed(time.Now().UnixNano())
-}
 
 // Error represents an http error.
 type Error struct {
@@ -66,7 +57,9 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 		cancel()
 		return nil, errors.Wrap(err, "failed to create GET request")
 	}
+	s.addExtraHeaders(req)
 	req.Header.Set("Accept", "application/json")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
@@ -80,7 +73,7 @@ func (s *Service) get(ctx context.Context, endpoint string) (io.Reader, error) {
 		return nil, nil
 	}
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "failed to read GET response")
@@ -109,7 +102,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	// #nosec G404
 	log := s.log.With().Str("id", fmt.Sprintf("%02x", rand.Int31())).Str("address", s.address).Str("endpoint", endpoint).Logger()
 	if e := log.Trace(); e.Enabled() {
-		bodyBytes, err := ioutil.ReadAll(body)
+		bodyBytes, err := io.ReadAll(body)
 		if err != nil {
 			return nil, errors.New("failed to read request body")
 		}
@@ -129,8 +122,10 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 		cancel()
 		return nil, errors.Wrap(err, "failed to create POST request")
 	}
+	s.addExtraHeaders(req)
 	req.Header.Set("Content-type", "application/json")
 	req.Header.Set("Accept", "application/json")
+
 	resp, err := s.client.Do(req)
 	if err != nil {
 		cancel()
@@ -138,7 +133,7 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	}
 	defer resp.Body.Close()
 
-	data, err := ioutil.ReadAll(resp.Body)
+	data, err := io.ReadAll(resp.Body)
 	if err != nil {
 		cancel()
 		return nil, errors.Wrap(err, "failed to read POST response")
@@ -160,6 +155,12 @@ func (s *Service) post(ctx context.Context, endpoint string, body io.Reader) (io
 	log.Trace().Str("response", string(data)).Msg("POST response")
 
 	return bytes.NewReader(data), nil
+}
+
+func (s *Service) addExtraHeaders(req *http.Request) {
+	for k, v := range s.extraHeaders {
+		req.Header.Add(k, v)
+	}
 }
 
 // responseMetadata returns metadata related to responses.

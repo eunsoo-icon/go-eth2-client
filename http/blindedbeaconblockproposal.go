@@ -76,11 +76,15 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		if resp.Data.Slot != slot {
 			return nil, errors.New("blinded beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("blinded beacon block proposal has incorrect RANDAO reveal")
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("blinded beacon block proposal has incorrect graffiti")
+		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
+			}
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
+			}
 		}
 		res.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
@@ -92,11 +96,15 @@ func (s *Service) blindedBeaconBlockProposal(ctx context.Context, slot phase0.Sl
 		if resp.Data.Slot != slot {
 			return nil, errors.New("blinded beacon block proposal not for requested slot")
 		}
-		if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
-			return nil, errors.New("blinded beacon block proposal has incorrect RANDAO reveal")
-		}
-		if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
-			return nil, errors.New("blinded beacon block proposal has incorrect graffiti")
+		// Only check the RANDAO reveal and graffiti if we are not connected to DVT middleware,
+		// as the returned values will be decided by the middleware.
+		if !s.connectedToDVTMiddleware {
+			if !bytes.Equal(resp.Data.Body.RANDAOReveal[:], randaoReveal[:]) {
+				return nil, fmt.Errorf("beacon block proposal has RANDAO reveal %#x; expected %#x", resp.Data.Body.RANDAOReveal[:], randaoReveal[:])
+			}
+			if !bytes.Equal(resp.Data.Body.Graffiti[:], graffiti) {
+				return nil, fmt.Errorf("beacon block proposal has graffiti %#x; expected %#x", resp.Data.Body.Graffiti[:], graffiti)
+			}
 		}
 		res.Capella = resp.Data
 	default:

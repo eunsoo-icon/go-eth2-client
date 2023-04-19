@@ -49,8 +49,6 @@ func NewErroring(ctx context.Context,
 		return nil, errors.New("error rate cannot be more than 1")
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
 	return &Erroring{
 		errorRate: errorRate,
 		next:      next,
@@ -629,6 +627,18 @@ func (s *Erroring) Domain(ctx context.Context, domainType phase0.DomainType, epo
 		return phase0.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
 	}
 	return next.Domain(ctx, domainType, epoch)
+}
+
+// GenesisDomain provides a domain for a given domain type.
+func (s *Erroring) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
+	if err := s.maybeError(ctx); err != nil {
+		return phase0.Domain{}, err
+	}
+	next, isNext := s.next.(consensusclient.DomainProvider)
+	if !isNext {
+		return phase0.Domain{}, fmt.Errorf("%s@%s does not support this call", s.next.Name(), s.next.Address())
+	}
+	return next.GenesisDomain(ctx, domainType)
 }
 
 // GenesisTime provides the genesis time of the chain.

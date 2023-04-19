@@ -50,8 +50,6 @@ func NewSleepy(ctx context.Context,
 		return nil, errors.New("max sleep less than min sleep")
 	}
 
-	rand.Seed(time.Now().UnixNano())
-
 	return &Sleepy{
 		minSleep: minSleep,
 		maxSleep: maxSleep,
@@ -437,6 +435,16 @@ func (s *Sleepy) Domain(ctx context.Context, domainType phase0.DomainType, epoch
 		return phase0.Domain{}, errors.New("next does not support this call")
 	}
 	return next.Domain(ctx, domainType, epoch)
+}
+
+// GenesisDomain provides a domain for a given domain type at genesis.
+func (s *Sleepy) GenesisDomain(ctx context.Context, domainType phase0.DomainType) (phase0.Domain, error) {
+	s.sleep(ctx)
+	next, isNext := s.next.(consensusclient.DomainProvider)
+	if !isNext {
+		return phase0.Domain{}, errors.New("next does not support this call")
+	}
+	return next.GenesisDomain(ctx, domainType)
 }
 
 // GenesisTime provides the genesis time of the chain.

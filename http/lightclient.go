@@ -83,7 +83,7 @@ type lightClientFinalityUpdateJSON struct {
 
 // LightClientFinalityUpdate provides the latest light client finality_update
 func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*altair.LightClientFinalityUpdate, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/finality_update"))
+	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/light_client/finality_update")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client finality_update")
 	}
@@ -105,7 +105,7 @@ type lightClientOptimisticUpdateJSON struct {
 
 // LightClientOptimisticUpdate provides the latest light client optimistic_update
 func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*altair.LightClientOptimisticUpdate, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/optimistic_update/"))
+	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/light_client/optimistic_update")
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client optimistic_update")
 	}

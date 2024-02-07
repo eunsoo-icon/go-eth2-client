@@ -14,109 +14,113 @@
 package http
 
 import (
+	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/pkg/errors"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
-type lightClientBootstrapJSON struct {
-	Data *capella.LightClientBootstrap `json:"data"`
-}
-
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
-func (s *Service) LightClientBootstrap(ctx context.Context, blockRoot phase0.Root) (*capella.LightClientBootstrap, error) {
-	respBodyReader, err := s.get(ctx, fmt.Sprintf("/eth/v1/beacon/light_client/bootstrap/%#x", blockRoot))
+func (s *Service) LightClientBootstrap(ctx context.Context, opts *api.LightClientBootstrapOpts) (
+	*api.Response[*capella.LightClientBootstrap],
+	error,
+) {
+	url := fmt.Sprintf("/eth/v1/beacon/light_client/bootstrap/%s", opts.Block)
+	resp, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client bootstrap")
 	}
-	if respBodyReader == nil {
+	if resp == nil {
 		return nil, nil
 	}
 
-	var resp lightClientBootstrapJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+	//if err := json.NewDecoder(bytes.NewReader(resp.body)).Decode(&resp); err != nil {
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientBootstrap{})
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client bootstrap")
 	}
 
-	return resp.Data, nil
-}
-
-type lightClientUpdateJSON struct {
-	Data *capella.LightClientUpdate `json:"data"`
+	return &api.Response[*capella.LightClientBootstrap]{
+		Data:     &data,
+		Metadata: metadata,
+	}, nil
 }
 
 // LightClientUpdates provides the light client update instances in the sync committee period range [startPeriod, startPeriod + count]
-func (s *Service) LightClientUpdates(ctx context.Context, startPeriod, count uint64) ([]*capella.LightClientUpdate, error) {
-	respBodyReader, err := s.get(
-		ctx,
-		fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", startPeriod, count),
-	)
+func (s *Service) LightClientUpdates(ctx context.Context, opts *api.LightClientUpdatesOpts) (
+	*api.Response[[]*capella.LightClientUpdate],
+	error,
+) {
+	url := fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", opts.StartPeriod, opts.Count)
+	resp, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client updates")
 	}
-	if respBodyReader == nil {
+	if resp == nil {
 		return nil, nil
 	}
 
-	var resp []lightClientUpdateJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), []*capella.LightClientUpdate{})
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client updates")
 	}
 
-	size := len(resp)
-	ret := make([]*capella.LightClientUpdate, size, size)
-	for i := 0; i < size; i++ {
-		ret[i] = resp[i].Data
-	}
-
-	return ret, nil
-}
-
-type lightClientFinalityUpdateJSON struct {
-	Data *capella.LightClientFinalityUpdate `json:"data"`
+	return &api.Response[[]*capella.LightClientUpdate]{
+		Data:     data,
+		Metadata: metadata,
+	}, nil
 }
 
 // LightClientFinalityUpdate provides the latest light client finality_update
-func (s *Service) LightClientFinalityUpdate(ctx context.Context) (*capella.LightClientFinalityUpdate, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/light_client/finality_update")
+func (s *Service) LightClientFinalityUpdate(ctx context.Context, opts *api.CommonOpts) (
+	*api.Response[*capella.LightClientFinalityUpdate],
+	error,
+) {
+	resp, err := s.get(ctx, "/eth/v1/beacon/light_client/finality_update", opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client finality_update")
 	}
-	if respBodyReader == nil {
+	if resp == nil {
 		return nil, nil
 	}
 
-	var resp lightClientFinalityUpdateJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientFinalityUpdate{})
+	if err != nil {
+		//var resp lightClientFinalityUpdateJSON
+		//if err := json.NewDecoder(bytes.NewReader(resp.body)).Decode(&resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client finality_update")
 	}
 
-	return resp.Data, nil
-}
-
-type lightClientOptimisticUpdateJSON struct {
-	Data *capella.LightClientOptimisticUpdate `json:"data"`
+	return &api.Response[*capella.LightClientFinalityUpdate]{
+		Data:     &data,
+		Metadata: metadata,
+	}, nil
 }
 
 // LightClientOptimisticUpdate provides the latest light client optimistic_update
-func (s *Service) LightClientOptimisticUpdate(ctx context.Context) (*capella.LightClientOptimisticUpdate, error) {
-	respBodyReader, err := s.get(ctx, "/eth/v1/beacon/light_client/optimistic_update")
+func (s *Service) LightClientOptimisticUpdate(ctx context.Context, opts *api.CommonOpts) (
+	*api.Response[*capella.LightClientOptimisticUpdate],
+	error,
+) {
+	resp, err := s.get(ctx, "/eth/v1/beacon/light_client/optimistic_update", opts)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to request beacon light client optimistic_update")
 	}
-	if respBodyReader == nil {
+	if resp == nil {
 		return nil, nil
 	}
 
-	var resp lightClientOptimisticUpdateJSON
-	if err := json.NewDecoder(respBodyReader).Decode(&resp); err != nil {
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientOptimisticUpdate{})
+	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client optimistic_update")
 	}
 
-	return resp.Data, nil
+	return &api.Response[*capella.LightClientOptimisticUpdate]{
+		Data:     &data,
+		Metadata: metadata,
+	}, nil
 }

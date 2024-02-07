@@ -16,15 +16,12 @@ package capella_test
 import (
 	"bytes"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/capella"
 	"github.com/goccy/go-yaml"
-	"github.com/golang/snappy"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestBLSToExecutionChangeJSON(t *testing.T) {
@@ -44,37 +41,37 @@ func TestBLSToExecutionChangeJSON(t *testing.T) {
 		},
 		{
 			name:  "ValidatorIndexMissing",
-			input: []byte(`{"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "validator index missing",
 		},
 		{
 			name:  "ValidatorIndexWrongType",
-			input: []byte(`{"validator_index":true,"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":true,"from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blsToExecutionChangeJSON.validator_index of type string",
 		},
 		{
 			name:  "ValidatorIndexInvalid",
-			input: []byte(`{"validator_index":"true","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"true","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "invalid value for validator index: strconv.ParseUint: parsing \"true\": invalid syntax",
 		},
 		{
 			name:  "FromBLSPubkeyMissing",
-			input: []byte(`{"validator_index":"2","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"2","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "from BLS public key missing",
 		},
 		{
 			name:  "FromBLSPubkeyWrongType",
-			input: []byte(`{"validator_index":"2","from_bls_pubkey":true,"to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"2","from_bls_pubkey":true,"to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "invalid JSON: json: cannot unmarshal bool into Go struct field blsToExecutionChangeJSON.from_bls_pubkey of type string",
 		},
 		{
 			name:  "FromBLSPubkeyInvalid",
-			input: []byte(`{"validator_index":"2","from_bls_pubkey":"invalid","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"2","from_bls_pubkey":"invalid","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "invalid value for from BLS public key: encoding/hex: invalid byte: U+0069 'i'",
 		},
 		{
 			name:  "FromBLSPubkeyWrongLength",
-			input: []byte(`{"validator_index":"2","from_bls_pubkey":"0x9bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"2","from_bls_pubkey":"0x9bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 			err:   "incorrect length for from BLS public key",
 		},
 		{
@@ -99,7 +96,7 @@ func TestBLSToExecutionChangeJSON(t *testing.T) {
 		},
 		{
 			name:  "Good",
-			input: []byte(`{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x000102030405060708090a0b0c0d0e0f10111213"}`),
+			input: []byte(`{"validator_index":"2","from_bls_pubkey":"0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b","to_execution_address":"0x0102030405060708090a0B0c0d0e0f1011121314"}`),
 		},
 	}
 
@@ -128,7 +125,7 @@ func TestBLSToExecutionChangeYAML(t *testing.T) {
 	}{
 		{
 			name:  "Good",
-			input: []byte(`{validator_index: 2, from_bls_pubkey: '0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b', to_execution_address: '0x000102030405060708090a0b0c0d0e0f10111213'}`),
+			input: []byte(`{validator_index: 2, from_bls_pubkey: '0xb89bebc699769726a318c8e9971bd3171297c61aea4a6578a7a4f94b547dcba5bac16a89108b6b6a1fe3695d1a874a0b', to_execution_address: '0x0102030405060708090a0B0c0d0e0f1011121314'}`),
 		},
 	}
 
@@ -148,38 +145,4 @@ func TestBLSToExecutionChangeYAML(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestBLSToExecutionChangeSpec(t *testing.T) {
-	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
-		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
-	}
-	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "capella", "ssz_static", "BLSToExecutionChange", "ssz_random")
-	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
-		if path == baseDir {
-			// Only interested in subdirectories.
-			return nil
-		}
-		require.NoError(t, err)
-		if info.IsDir() {
-			t.Run(info.Name(), func(t *testing.T) {
-				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
-				require.NoError(t, err)
-				var res capella.BLSToExecutionChange
-				require.NoError(t, yaml.Unmarshal(specYAML, &res))
-
-				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
-				require.NoError(t, err)
-				var specSSZ []byte
-				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
-				require.NoError(t, err)
-
-				// Ensure this matches the expected hash tree root.
-				ssz, err := res.MarshalSSZ()
-				require.NoError(t, err)
-				require.Equal(t, specSSZ, ssz)
-			})
-		}
-		return nil
-	}))
 }

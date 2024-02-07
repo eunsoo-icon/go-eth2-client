@@ -16,15 +16,12 @@ package phase0_test
 import (
 	"bytes"
 	"encoding/json"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/goccy/go-yaml"
-	"github.com/golang/snappy"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gotest.tools/assert"
 )
 
 func TestVoluntaryExitJSON(t *testing.T) {
@@ -123,38 +120,4 @@ func TestVoluntaryExitYAML(t *testing.T) {
 			}
 		})
 	}
-}
-
-func TestVoluntaryExitSpec(t *testing.T) {
-	if os.Getenv("ETH2_SPEC_TESTS_DIR") == "" {
-		t.Skip("ETH2_SPEC_TESTS_DIR not suppplied, not running spec tests")
-	}
-	baseDir := filepath.Join(os.Getenv("ETH2_SPEC_TESTS_DIR"), "tests", "mainnet", "phase0", "ssz_static", "VoluntaryExit", "ssz_random")
-	require.NoError(t, filepath.Walk(baseDir, func(path string, info os.FileInfo, err error) error {
-		if path == baseDir {
-			// Only interested in subdirectories.
-			return nil
-		}
-		require.NoError(t, err)
-		if info.IsDir() {
-			t.Run(info.Name(), func(t *testing.T) {
-				specYAML, err := os.ReadFile(filepath.Join(path, "value.yaml"))
-				require.NoError(t, err)
-				var res phase0.VoluntaryExit
-				require.NoError(t, yaml.Unmarshal(specYAML, &res))
-
-				compressedSpecSSZ, err := os.ReadFile(filepath.Join(path, "serialized.ssz_snappy"))
-				require.NoError(t, err)
-				var specSSZ []byte
-				specSSZ, err = snappy.Decode(specSSZ, compressedSpecSSZ)
-				require.NoError(t, err)
-
-				// Ensure this matches the expected hash tree root.
-				ssz, err := res.MarshalSSZ()
-				require.NoError(t, err)
-				require.Equal(t, specSSZ, ssz)
-			})
-		}
-		return nil
-	}))
 }

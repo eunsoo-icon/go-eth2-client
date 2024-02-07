@@ -80,6 +80,7 @@ func (s *Service) Events(ctx context.Context, topics []string, handler client.Ev
 				log.Trace().Msg("Events stream disconnected")
 			case <-ctx.Done():
 				log.Debug().Msg("Context done")
+
 				return
 			}
 		}
@@ -94,10 +95,12 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 
 	if handler == nil {
 		log.Debug().Msg("No handler supplied; ignoring")
+
 		return
 	}
 	if msg == nil {
 		log.Debug().Msg("No message supplied; ignoring")
+
 		return
 	}
 
@@ -110,6 +113,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, headEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse head event")
+
 			return
 		}
 		event.Data = headEvent
@@ -118,6 +122,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, blockEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse block event")
+
 			return
 		}
 		event.Data = blockEvent
@@ -126,6 +131,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, attestation)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attestation")
+
 			return
 		}
 		event.Data = attestation
@@ -134,6 +140,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, voluntaryExit)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse voluntary exit")
+
 			return
 		}
 		event.Data = voluntaryExit
@@ -142,6 +149,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, finalizedCheckpointEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse finalized checkpoint event")
+
 			return
 		}
 		event.Data = finalizedCheckpointEvent
@@ -150,6 +158,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, chainReorgEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse chain reorg event")
+
 			return
 		}
 		event.Data = chainReorgEvent
@@ -158,29 +167,77 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		err := json.Unmarshal(msg.Data, contributionAndProofEvent)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse contribution and proof event")
+
 			return
 		}
 		event.Data = contributionAndProofEvent
 	case "light_client_finality_update":
-		update := &capella.LightClientFinalityUpdate{}
-		//update := &eventLightClientFinalityUpdateJSON{}
+		type eventLightClientFinalityUpdateJSON struct {
+			Data *capella.LightClientFinalityUpdate `json:"data"`
+		}
+		update := &eventLightClientFinalityUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
 			return
 		}
-		event.Data = update
-		//event.Data = update.Data
+		event.Data = update.Data
 	case "light_client_optimistic_update":
-		update := &capella.LightClientOptimisticUpdate{}
-		//update := &eventLightClientOptimisticUpdateJSON{}
+		type eventLightClientOptimisticUpdateJSON struct {
+			Data *capella.LightClientOptimisticUpdate `json:"data"`
+		}
+		update := &eventLightClientOptimisticUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
 		if err != nil {
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
 			return
 		}
-		event.Data = update
-		//event.Data = update.Data
+		event.Data = update.Data
+	case "payload_attributes":
+		payloadAttributesEvent := &api.PayloadAttributesEvent{}
+		err := json.Unmarshal(msg.Data, payloadAttributesEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse payload attributes event")
+
+			return
+		}
+		event.Data = payloadAttributesEvent
+	case "proposer_slashing":
+		proposerSlashingEvent := &phase0.ProposerSlashing{}
+		err := json.Unmarshal(msg.Data, proposerSlashingEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse proposer slashing event")
+
+			return
+		}
+		event.Data = proposerSlashingEvent
+	case "attester_slashing":
+		attesterSlashingEvent := &phase0.AttesterSlashing{}
+		err := json.Unmarshal(msg.Data, attesterSlashingEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse attester slashing event")
+
+			return
+		}
+		event.Data = attesterSlashingEvent
+	case "bls_to_execution_change":
+		blsToExecutionChangeEvent := &capella.BLSToExecutionChange{}
+		err := json.Unmarshal(msg.Data, blsToExecutionChangeEvent)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse bls to execution change event")
+
+			return
+		}
+		event.Data = blsToExecutionChangeEvent
+	case "blob_sidecar":
+		blobSidecar := &api.BlobSidecarEvent{}
+		err := json.Unmarshal(msg.Data, blobSidecar)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse blob sidecar event")
+
+			return
+		}
+		event.Data = blobSidecar
 	case "":
 		// Used as keepalive.  Ignore.
 		return
@@ -189,11 +246,4 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		return
 	}
 	handler(event)
-}
-
-type eventLightClientFinalityUpdateJSON struct {
-	Data *altair.LightClientFinalityUpdate `json:"data"`
-}
-type eventLightClientOptimisticUpdateJSON struct {
-	Data *altair.LightClientOptimisticUpdate `json:"data"`
 }

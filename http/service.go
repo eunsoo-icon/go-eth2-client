@@ -28,7 +28,8 @@ import (
 	zerologger "github.com/rs/zerolog/log"
 
 	eth2client "github.com/attestantio/go-eth2-client"
-	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/api"
+	apiv1 "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -44,11 +45,11 @@ type Service struct {
 
 	// Various information from the node that does not change during the
 	// lifetime of a beacon node.
-	genesis              *api.Genesis
+	genesis              *apiv1.Genesis
 	genesisMutex         sync.RWMutex
 	spec                 map[string]interface{}
 	specMutex            sync.RWMutex
-	depositContract      *api.DepositContract
+	depositContract      *apiv1.DepositContract
 	depositContractMutex sync.RWMutex
 	forkSchedule         []*phase0.Fork
 	forkScheduleMutex    sync.RWMutex
@@ -61,6 +62,7 @@ type Service struct {
 	extraHeaders        map[string]string
 
 	// Endpoint support.
+	enforceJSON              bool
 	connectedToDVTMiddleware bool
 }
 
@@ -77,8 +79,13 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		log = log.Level(parameters.logLevel)
 	}
 
+	if parameters.monitor != nil {
+		if err := registerMetrics(ctx, parameters.monitor); err != nil {
+			return nil, errors.Wrap(err, "failed to register metrics")
+		}
+	}
+
 	client := &http.Client{
-		Timeout: parameters.timeout,
 		Transport: &http.Transport{
 			DialContext: (&net.Dialer{
 				Timeout:   parameters.timeout,
@@ -113,6 +120,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 		userIndexChunkSize:  parameters.indexChunkSize,
 		userPubKeyChunkSize: parameters.pubKeyChunkSize,
 		extraHeaders:        parameters.extraHeaders,
+		enforceJSON:         parameters.enforceJSON,
 	}
 
 	// Fetch static values to confirm the connection is good.
@@ -121,9 +129,7 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 	}
 
 	// Periodially refetch static values in case of client update.
-	if err := s.periodicClearStaticValues(ctx); err != nil {
-		return nil, errors.Wrap(err, "failed to set update ticker")
-	}
+	s.periodicClearStaticValues(ctx)
 
 	// Handle connection to DVT middleware.
 	if err := s.checkDVT(ctx); err != nil {
@@ -143,19 +149,19 @@ func New(ctx context.Context, params ...Parameter) (eth2client.Service, error) {
 // fetchStaticValues fetches values that never change.
 // This caches the values, avoiding future API calls.
 func (s *Service) fetchStaticValues(ctx context.Context) error {
-	if _, err := s.Genesis(ctx); err != nil {
+	if _, err := s.Genesis(ctx, &api.GenesisOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch genesis")
 	}
-	if _, err := s.Spec(ctx); err != nil {
+	if _, err := s.Spec(ctx, &api.SpecOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch spec")
 	}
-	if _, err := s.DepositContract(ctx); err != nil {
+	if _, err := s.DepositContract(ctx, &api.DepositContractOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch deposit contract")
 	}
-	if _, err := s.ForkSchedule(ctx); err != nil {
+	if _, err := s.ForkSchedule(ctx, &api.ForkScheduleOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch fork schedule")
 	}
-	if _, err := s.NodeVersion(ctx); err != nil {
+	if _, err := s.NodeVersion(ctx, &api.NodeVersionOpts{}); err != nil {
 		return errors.Wrap(err, "failed to fetch node version")
 	}
 
@@ -164,10 +170,11 @@ func (s *Service) fetchStaticValues(ctx context.Context) error {
 
 // periodicClearStaticValues periodically sets static values to nil so they are
 // refetched the next time they are required.
-func (s *Service) periodicClearStaticValues(ctx context.Context) error {
+func (s *Service) periodicClearStaticValues(ctx context.Context) {
 	go func(s *Service, ctx context.Context) {
 		// Refreah every 5 minutes.
 		refreshTicker := time.NewTicker(5 * time.Minute)
+		defer refreshTicker.Stop()
 		for {
 			select {
 			case <-refreshTicker.C:
@@ -191,18 +198,19 @@ func (s *Service) periodicClearStaticValues(ctx context.Context) error {
 			}
 		}
 	}(s, ctx)
-	return nil
 }
 
 // checkDVT checks if connected to DVT middleware and sets
 // internal flags appropriately.
 func (s *Service) checkDVT(ctx context.Context) error {
-	version, err := s.NodeVersion(ctx)
+	response, err := s.NodeVersion(ctx, &api.NodeVersionOpts{})
 	if err != nil {
 		return errors.Wrap(err, "failed to obtain node version for DVT check")
 	}
 
-	if strings.Contains(strings.ToLower(version), "charon") {
+	version := strings.ToLower(response.Data)
+
+	if strings.Contains(version, "charon") {
 		s.connectedToDVTMiddleware = true
 	}
 

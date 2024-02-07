@@ -25,7 +25,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-// SignedValidatorRegistration is a signed ValidatorRegistrationV1
+// SignedValidatorRegistration is a signed ValidatorRegistrationV1.
 type SignedValidatorRegistration struct {
 	Message   *ValidatorRegistration
 	Signature phase0.BLSSignature `ssz-size:"96"`
@@ -57,6 +57,7 @@ func (s *SignedValidatorRegistration) UnmarshalJSON(input []byte) error {
 	if err := json.Unmarshal(input, &data); err != nil {
 		return errors.Wrap(err, "invalid JSON")
 	}
+
 	return s.unpack(&data)
 }
 
@@ -89,6 +90,7 @@ func (s *SignedValidatorRegistration) MarshalYAML() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return bytes.ReplaceAll(yamlBytes, []byte(`"`), []byte(`'`)), nil
 }
 
@@ -99,6 +101,7 @@ func (s *SignedValidatorRegistration) UnmarshalYAML(input []byte) error {
 	if err := yaml.Unmarshal(input, &data); err != nil {
 		return err
 	}
+
 	return s.unpack(&data)
 }
 
@@ -108,5 +111,6 @@ func (s *SignedValidatorRegistration) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }

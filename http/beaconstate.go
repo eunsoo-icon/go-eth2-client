@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -16,82 +16,114 @@ package http
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io"
 
+	"github.com/attestantio/go-eth2-client/api"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 	"github.com/pkg/errors"
 )
 
-type phase0BeaconStateJSON struct {
-	Data *phase0.BeaconState `json:"data"`
-}
-
-type altairBeaconStateJSON struct {
-	Data *altair.BeaconState `json:"data"`
-}
-
-type bellatrixBeaconStateJSON struct {
-	Data *bellatrix.BeaconState `json:"data"`
-}
-
-type capellaBeaconStateJSON struct {
-	Data *capella.BeaconState `json:"data"`
-}
-
 // BeaconState fetches a beacon state.
-// N.B if the requested beacon state is not available this will return nil without an error.
-func (s *Service) BeaconState(ctx context.Context, stateID string) (*spec.VersionedBeaconState, error) {
-	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", stateID)
-	respBodyReader, err := s.get(ctx, url)
+func (s *Service) BeaconState(ctx context.Context,
+	opts *api.BeaconStateOpts,
+) (
+	*api.Response[*spec.VersionedBeaconState],
+	error,
+) {
+	if opts == nil {
+		return nil, errors.New("no options specified")
+	}
+	if opts.State == "" {
+		return nil, errors.New("no state specified")
+	}
+
+	url := fmt.Sprintf("/eth/v2/debug/beacon/states/%s", opts.State)
+	httpResponse, err := s.get(ctx, url, &opts.Common)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to request beacon state")
-	}
-	if respBodyReader == nil {
-		return nil, nil
+		return nil, err
 	}
 
-	var dataBodyReader bytes.Buffer
-	metadataReader := io.TeeReader(respBodyReader, &dataBodyReader)
-	var metadata responseMetadata
-	if err := json.NewDecoder(metadataReader).Decode(&metadata); err != nil {
-		return nil, errors.Wrap(err, "failed to parse response")
+	switch httpResponse.contentType {
+	case ContentTypeSSZ:
+		return s.beaconStateFromSSZ(httpResponse)
+	case ContentTypeJSON:
+		return s.beaconStateFromJSON(httpResponse)
+	default:
+		return nil, fmt.Errorf("unhandled content type %v", httpResponse.contentType)
 	}
-	res := &spec.VersionedBeaconState{
-		Version: metadata.Version,
+}
+
+func (s *Service) beaconStateFromSSZ(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
+	response := &api.Response[*spec.VersionedBeaconState]{
+		Data: &spec.VersionedBeaconState{
+			Version: res.consensusVersion,
+		},
+		Metadata: metadataFromHeaders(res.headers),
 	}
 
-	switch metadata.Version {
+	switch res.consensusVersion {
 	case spec.DataVersionPhase0:
-		var resp phase0BeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse phase 0 beacon state")
+		response.Data.Phase0 = &phase0.BeaconState{}
+		if err := response.Data.Phase0.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode phase0 beacon state")
 		}
-		res.Phase0 = resp.Data
 	case spec.DataVersionAltair:
-		var resp altairBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse altair beacon state")
+		response.Data.Altair = &altair.BeaconState{}
+		if err := response.Data.Altair.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode altair beacon state")
 		}
-		res.Altair = resp.Data
 	case spec.DataVersionBellatrix:
-		var resp bellatrixBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse bellatrix beacon state")
+		response.Data.Bellatrix = &bellatrix.BeaconState{}
+		if err := response.Data.Bellatrix.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode bellatrix beacon state")
 		}
-		res.Bellatrix = resp.Data
 	case spec.DataVersionCapella:
-		var resp capellaBeaconStateJSON
-		if err := json.NewDecoder(&dataBodyReader).Decode(&resp); err != nil {
-			return nil, errors.Wrap(err, "failed to parse capella beacon state")
+		response.Data.Capella = &capella.BeaconState{}
+		if err := response.Data.Capella.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode capella beacon state")
 		}
-		res.Capella = resp.Data
+	case spec.DataVersionDeneb:
+		response.Data.Deneb = &deneb.BeaconState{}
+		if err := response.Data.Deneb.UnmarshalSSZ(res.body); err != nil {
+			return nil, errors.Wrap(err, "failed to decode deneb beacon state")
+		}
+	default:
+		return nil, fmt.Errorf("unhandled state version %s", res.consensusVersion)
 	}
 
-	return res, nil
+	return response, nil
+}
+
+func (s *Service) beaconStateFromJSON(res *httpResponse) (*api.Response[*spec.VersionedBeaconState], error) {
+	response := &api.Response[*spec.VersionedBeaconState]{
+		Data: &spec.VersionedBeaconState{
+			Version: res.consensusVersion,
+		},
+	}
+
+	var err error
+	switch res.consensusVersion {
+	case spec.DataVersionPhase0:
+		response.Data.Phase0, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &phase0.BeaconState{})
+	case spec.DataVersionAltair:
+		response.Data.Altair, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &altair.BeaconState{})
+	case spec.DataVersionBellatrix:
+		response.Data.Bellatrix, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &bellatrix.BeaconState{})
+	case spec.DataVersionCapella:
+		response.Data.Capella, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &capella.BeaconState{})
+	case spec.DataVersionDeneb:
+		response.Data.Deneb, response.Metadata, err = decodeJSONResponse(bytes.NewReader(res.body), &deneb.BeaconState{})
+	default:
+		err = fmt.Errorf("unsupported version %s", res.consensusVersion)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
 }

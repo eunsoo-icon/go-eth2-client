@@ -1,4 +1,4 @@
-// Copyright © 2020, 2021 Attestant Limited.
+// Copyright © 2020 - 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -23,6 +23,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func gweiPtr(input phase0.Gwei) *phase0.Gwei {
+	return &input
+}
 
 func TestValidatorStateJSON(t *testing.T) {
 	tests := []struct {
@@ -143,6 +147,7 @@ func TestValidatorToState(t *testing.T) {
 	tests := []struct {
 		name      string
 		validator *phase0.Validator
+		balance   *phase0.Gwei
 		state     api.ValidatorState
 	}{
 		{
@@ -180,6 +185,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStatePendingQueued,
 		},
 		{
+			name: "ActiveOngoingNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch + 1,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStatePendingQueued,
+		},
+		{
+			name: "ActiveOngoingThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch,
+				ExitEpoch:                  farFutureEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveOngoing,
+		},
+		{
 			name: "ActiveOngoing",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -211,6 +236,26 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateActiveSlashed,
 		},
 		{
+			name: "ExitedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateActiveExiting,
+		},
+		{
+			name: "ExitedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+			},
+			state: api.ValidatorStateExitedUnslashed,
+		},
+		{
 			name: "ExitedUnslashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
@@ -221,7 +266,29 @@ func TestValidatorToState(t *testing.T) {
 			state: api.ValidatorStateExitedUnslashed,
 		},
 		{
-			name: "ExitedUnslashed",
+			name: "ExitedSlashedNext",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch + 1,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateActiveSlashed,
+		},
+		{
+			name: "ExitedSlashedThis",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch,
+				WithdrawableEpoch:          farFutureEpoch,
+				Slashed:                    true,
+			},
+			state: api.ValidatorStateExitedSlashed,
+		},
+		{
+			name: "ExitedSlashed",
 			validator: &phase0.Validator{
 				ActivationEligibilityEpoch: currentEpoch - 50,
 				ActivationEpoch:            currentEpoch - 40,
@@ -252,12 +319,70 @@ func TestValidatorToState(t *testing.T) {
 			},
 			state: api.ValidatorStateWithdrawalPossible,
 		},
+		{
+			name: "WithdrawalPossibleBalance",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch - 30,
+				WithdrawableEpoch:          currentEpoch - 20,
+			},
+			balance: gweiPtr(5),
+			state:   api.ValidatorStateWithdrawalPossible,
+		},
+		{
+			name: "WithdrawalDone",
+			validator: &phase0.Validator{
+				ActivationEligibilityEpoch: currentEpoch - 50,
+				ActivationEpoch:            currentEpoch - 40,
+				ExitEpoch:                  currentEpoch - 30,
+				WithdrawableEpoch:          currentEpoch - 20,
+			},
+			balance: gweiPtr(0),
+			state:   api.ValidatorStateWithdrawalDone,
+		},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			state := api.ValidatorToState(test.validator, currentEpoch, farFutureEpoch)
+			state := api.ValidatorToState(test.validator, test.balance, currentEpoch, farFutureEpoch)
 			assert.Equal(t, test.state, state)
+		})
+	}
+}
+
+func TestString(t *testing.T) {
+	tests := []struct {
+		name     string
+		state    api.ValidatorState
+		expected string
+	}{
+		{
+			name:     "valid state",
+			state:    api.ValidatorStateActiveOngoing,
+			expected: "active_ongoing",
+		},
+		{
+			name:     "negative index",
+			state:    -1,
+			expected: "unknown",
+		},
+		{
+			name:     "edge bound index",
+			state:    10,
+			expected: "unknown",
+		},
+		{
+			name:     "high out of bound index",
+			state:    250,
+			expected: "unknown",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			resp := test.state.String()
+			require.Equal(t, test.expected, resp)
 		})
 	}
 }

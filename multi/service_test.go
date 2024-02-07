@@ -109,7 +109,6 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.AttestationsSubmitter)(nil), s)
 	assert.Implements(t, (*client.AttesterDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockHeadersProvider)(nil), s)
-	assert.Implements(t, (*client.BeaconBlockProposalProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockRootProvider)(nil), s)
 	assert.Implements(t, (*client.BeaconBlockSubmitter)(nil), s)
 	assert.Implements(t, (*client.BeaconCommitteeSubscriptionsSubmitter)(nil), s)
@@ -123,8 +122,9 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ForkScheduleProvider)(nil), s)
 	assert.Implements(t, (*client.GenesisProvider)(nil), s)
 	assert.Implements(t, (*client.NodeSyncingProvider)(nil), s)
-	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.ProposalPreparationsSubmitter)(nil), s)
+	assert.Implements(t, (*client.ProposalProvider)(nil), s)
+	assert.Implements(t, (*client.ProposerDutiesProvider)(nil), s)
 	assert.Implements(t, (*client.SpecProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionProvider)(nil), s)
 	assert.Implements(t, (*client.SyncCommitteeContributionsSubmitter)(nil), s)
@@ -136,6 +136,7 @@ func TestInterfaces(t *testing.T) {
 	assert.Implements(t, (*client.ValidatorsProvider)(nil), s)
 	assert.Implements(t, (*client.VoluntaryExitSubmitter)(nil), s)
 	assert.Implements(t, (*client.LightClientProvider)(nil), s)
+	assert.Implements(t, (*client.VoluntaryExitPoolProvider)(nil), s)
 
 	// Non-standard extensions.
 	assert.Implements(t, (*client.DomainProvider)(nil), s)

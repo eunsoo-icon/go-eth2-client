@@ -23,6 +23,8 @@ import (
 )
 
 // SubmitBeaconBlock submits a beacon block.
+//
+// Deprecated: this will not work from the deneb hard-fork onwards.  Use SubmitProposal() instead.
 func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSignedBeaconBlock) error {
 	var specJSON []byte
 	var err error
@@ -40,6 +42,8 @@ func (s *Service) SubmitBeaconBlock(ctx context.Context, block *spec.VersionedSi
 		specJSON, err = json.Marshal(block.Bellatrix)
 	case spec.DataVersionCapella:
 		specJSON, err = json.Marshal(block.Capella)
+	case spec.DataVersionDeneb:
+		specJSON, err = json.Marshal(block.Deneb)
 	default:
 		err = errors.New("unknown block version")
 	}

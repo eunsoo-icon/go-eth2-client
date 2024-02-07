@@ -1,4 +1,4 @@
-// Copyright © 2022 Attestant Limited.
+// Copyright © 2022, 2023 Attestant Limited.
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
@@ -14,10 +14,9 @@
 package api
 
 import (
-	"errors"
-
 	apiv1bellatrix "github.com/attestantio/go-eth2-client/api/v1/bellatrix"
 	apiv1capella "github.com/attestantio/go-eth2-client/api/v1/capella"
+	apiv1deneb "github.com/attestantio/go-eth2-client/api/v1/deneb"
 	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/bellatrix"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
@@ -28,148 +27,286 @@ type VersionedBlindedBeaconBlock struct {
 	Version   spec.DataVersion
 	Bellatrix *apiv1bellatrix.BlindedBeaconBlock
 	Capella   *apiv1capella.BlindedBeaconBlock
+	Deneb     *apiv1deneb.BlindedBeaconBlock
 }
 
 // IsEmpty returns true if there is no block.
 func (v *VersionedBlindedBeaconBlock) IsEmpty() bool {
-	return v.Bellatrix == nil
+	return v.Bellatrix == nil && v.Capella == nil && v.Deneb == nil
 }
 
-// Slot returns the slot of the beacon block.
+// Slot returns the slot of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Slot() (phase0.Slot, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return 0, errors.New("no bellatrix block")
+			return 0, ErrDataMissing
 		}
+
 		return v.Bellatrix.Slot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return 0, errors.New("no capella block")
+			return 0, ErrDataMissing
 		}
+
 		return v.Capella.Slot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Deneb.Slot, nil
 	default:
-		return 0, errors.New("unsupported version")
+		return 0, ErrUnsupportedVersion
 	}
 }
 
-// Attestations returns the attestations of the beacon block.
+// ProposerIndex returns the proposer index of the beacon block.
+func (v *VersionedBlindedBeaconBlock) ProposerIndex() (phase0.ValidatorIndex, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Bellatrix.ProposerIndex, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Capella.ProposerIndex, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Deneb.ProposerIndex, nil
+	default:
+		return 0, ErrUnsupportedVersion
+	}
+}
+
+// RandaoReveal returns the RANDAO reveal of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) RandaoReveal() (phase0.BLSSignature, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Bellatrix.Body.RANDAOReveal, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil ||
+			v.Capella.Body == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Capella.Body.RANDAOReveal, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil {
+			return phase0.BLSSignature{}, ErrDataMissing
+		}
+
+		return v.Deneb.Body.RANDAOReveal, nil
+	default:
+		return phase0.BLSSignature{}, ErrUnsupportedVersion
+	}
+}
+
+// Graffiti returns the graffiti of the blinded beacon block.
+func (v *VersionedBlindedBeaconBlock) Graffiti() ([32]byte, error) {
+	switch v.Version {
+	case spec.DataVersionBellatrix:
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil {
+			return [32]byte{}, ErrDataMissing
+		}
+
+		return v.Bellatrix.Body.Graffiti, nil
+	case spec.DataVersionCapella:
+		if v.Capella == nil ||
+			v.Capella.Body == nil {
+			return [32]byte{}, ErrDataMissing
+		}
+
+		return v.Capella.Body.Graffiti, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil {
+			return [32]byte{}, ErrDataMissing
+		}
+
+		return v.Deneb.Body.Graffiti, nil
+	default:
+		return [32]byte{}, ErrUnsupportedVersion
+	}
+}
+
+// Attestations returns the attestations of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Attestations() ([]*phase0.Attestation, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil || v.Bellatrix.Body == nil {
-			return nil, errors.New("no bellatrix block")
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil {
+			return nil, ErrDataMissing
 		}
+
 		return v.Bellatrix.Body.Attestations, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil || v.Capella.Body == nil {
-			return nil, errors.New("no capella block")
+		if v.Capella == nil ||
+			v.Capella.Body == nil {
+			return nil, ErrDataMissing
 		}
+
 		return v.Capella.Body.Attestations, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil {
+			return nil, ErrDataMissing
+		}
+
+		return v.Deneb.Body.Attestations, nil
 	default:
-		return nil, errors.New("unsupported version")
+		return nil, ErrUnsupportedVersion
 	}
 }
 
-// Root returns the root of the beacon block.
+// Root returns the root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) Root() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.Root{}, errors.New("no bellatrix block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Bellatrix.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.Root{}, errors.New("no capella block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Capella.HashTreeRoot()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Deneb.HashTreeRoot()
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }
 
-// BodyRoot returns the body root of the beacon block.
+// BodyRoot returns the body root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) BodyRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.Root{}, errors.New("no bellatrix block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Bellatrix.Body.HashTreeRoot()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.Root{}, errors.New("no capella block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Capella.Body.HashTreeRoot()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Deneb.Body.HashTreeRoot()
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }
 
-// ParentRoot returns the parent root of the beacon block.
+// ParentRoot returns the parent root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) ParentRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.Root{}, errors.New("no bellatrix block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Bellatrix.ParentRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.Root{}, errors.New("no capella block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Capella.ParentRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Deneb.ParentRoot, nil
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }
 
-// StateRoot returns the state root of the beacon block.
+// StateRoot returns the state root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) StateRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
 		if v.Bellatrix == nil {
-			return phase0.Root{}, errors.New("no bellatrix block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Bellatrix.StateRoot, nil
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
-			return phase0.Root{}, errors.New("no capella block")
+			return phase0.Root{}, ErrDataMissing
 		}
+
 		return v.Capella.StateRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Deneb.StateRoot, nil
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }
 
-// TransactionsRoot returns the transactions root of the beacon block.
+// TransactionsRoot returns the transactions root of the blinded beacon block.
 func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return phase0.Root{}, errors.New("no bellatrix block")
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil ||
+			v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, ErrDataMissing
 		}
-		if v.Bellatrix.Body == nil {
-			return phase0.Root{}, errors.New("no bellatrix block body")
-		}
-		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
-			return phase0.Root{}, errors.New("no bellatrix block body execution payload header")
-		}
+
 		return v.Bellatrix.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return phase0.Root{}, errors.New("no capella block")
+		if v.Capella == nil ||
+			v.Capella.Body == nil ||
+			v.Capella.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, ErrDataMissing
 		}
-		if v.Capella.Body == nil {
-			return phase0.Root{}, errors.New("no capella block body")
-		}
-		if v.Capella.Body.ExecutionPayloadHeader == nil {
-			return phase0.Root{}, errors.New("no capella block body execution payload header")
-		}
+
 		return v.Capella.Body.ExecutionPayloadHeader.TransactionsRoot, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil ||
+			v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return phase0.Root{}, ErrDataMissing
+		}
+
+		return v.Deneb.Body.ExecutionPayloadHeader.TransactionsRoot, nil
 	default:
-		return phase0.Root{}, errors.New("unsupported version")
+		return phase0.Root{}, ErrUnsupportedVersion
 	}
 }
 
@@ -177,29 +314,31 @@ func (v *VersionedBlindedBeaconBlock) TransactionsRoot() (phase0.Root, error) {
 func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block")
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil ||
+			v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
 		}
-		if v.Bellatrix.Body == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body")
-		}
-		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no bellatrix block body execution payload header")
-		}
+
 		return v.Bellatrix.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no capella block")
+		if v.Capella == nil ||
+			v.Capella.Body == nil ||
+			v.Capella.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
 		}
-		if v.Capella.Body == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no capella block body")
-		}
-		if v.Capella.Body.ExecutionPayloadHeader == nil {
-			return bellatrix.ExecutionAddress{}, errors.New("no capella block body execution payload header")
-		}
+
 		return v.Capella.Body.ExecutionPayloadHeader.FeeRecipient, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil ||
+			v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return bellatrix.ExecutionAddress{}, ErrDataMissing
+		}
+
+		return v.Deneb.Body.ExecutionPayloadHeader.FeeRecipient, nil
 	default:
-		return bellatrix.ExecutionAddress{}, errors.New("unsupported version")
+		return bellatrix.ExecutionAddress{}, ErrUnsupportedVersion
 	}
 }
 
@@ -207,29 +346,31 @@ func (v *VersionedBlindedBeaconBlock) FeeRecipient() (bellatrix.ExecutionAddress
 func (v *VersionedBlindedBeaconBlock) Timestamp() (uint64, error) {
 	switch v.Version {
 	case spec.DataVersionBellatrix:
-		if v.Bellatrix == nil {
-			return 0, errors.New("no bellatrix block")
+		if v.Bellatrix == nil ||
+			v.Bellatrix.Body == nil ||
+			v.Bellatrix.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
 		}
-		if v.Bellatrix.Body == nil {
-			return 0, errors.New("no bellatrix block body")
-		}
-		if v.Bellatrix.Body.ExecutionPayloadHeader == nil {
-			return 0, errors.New("no bellatrix block body execution payload header")
-		}
+
 		return v.Bellatrix.Body.ExecutionPayloadHeader.Timestamp, nil
 	case spec.DataVersionCapella:
-		if v.Capella == nil {
-			return 0, errors.New("no capella block")
+		if v.Capella == nil ||
+			v.Capella.Body == nil ||
+			v.Capella.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
 		}
-		if v.Capella.Body == nil {
-			return 0, errors.New("no capella block body")
-		}
-		if v.Capella.Body.ExecutionPayloadHeader == nil {
-			return 0, errors.New("no capella block body execution payload header")
-		}
+
 		return v.Capella.Body.ExecutionPayloadHeader.Timestamp, nil
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil ||
+			v.Deneb.Body == nil ||
+			v.Deneb.Body.ExecutionPayloadHeader == nil {
+			return 0, ErrDataMissing
+		}
+
+		return v.Deneb.Body.ExecutionPayloadHeader.Timestamp, nil
 	default:
-		return 0, errors.New("unsupported version")
+		return 0, ErrUnsupportedVersion
 	}
 }
 
@@ -240,12 +381,20 @@ func (v *VersionedBlindedBeaconBlock) String() string {
 		if v.Bellatrix == nil {
 			return ""
 		}
+
 		return v.Bellatrix.String()
 	case spec.DataVersionCapella:
 		if v.Capella == nil {
 			return ""
 		}
+
 		return v.Capella.String()
+	case spec.DataVersionDeneb:
+		if v.Deneb == nil {
+			return ""
+		}
+
+		return v.Deneb.String()
 	default:
 		return "unknown version"
 	}

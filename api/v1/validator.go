@@ -88,10 +88,11 @@ func (v *Validator) String() string {
 	if err != nil {
 		return fmt.Sprintf("ERR: %v", err)
 	}
+
 	return string(data)
 }
 
-// PubKey implements ValidatorPubKeyProvider
-func (v *Validator) PubKey(ctx context.Context) (phase0.BLSPubKey, error) {
+// PubKey implements ValidatorPubKeyProvider.
+func (v *Validator) PubKey(_ context.Context) (phase0.BLSPubKey, error) {
 	return v.Validator.PublicKey, nil
 }

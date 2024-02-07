@@ -18,8 +18,8 @@ import (
 	"fmt"
 	"testing"
 
-	require "github.com/stretchr/testify/require"
-	"gotest.tools/assert"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/attestantio/go-eth2-client/spec/altair"
 )

@@ -32,6 +32,7 @@ import (
 	api "github.com/attestantio/go-eth2-client/api/v1"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -173,7 +174,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		event.Data = contributionAndProofEvent
 	case "light_client_finality_update":
 		type eventLightClientFinalityUpdateJSON struct {
-			Data *capella.LightClientFinalityUpdate `json:"data"`
+			Data *deneb.LightClientFinalityUpdate `json:"data"`
 		}
 		update := &eventLightClientFinalityUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
@@ -184,7 +185,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		event.Data = update.Data
 	case "light_client_optimistic_update":
 		type eventLightClientOptimisticUpdateJSON struct {
-			Data *capella.LightClientOptimisticUpdate `json:"data"`
+			Data *deneb.LightClientOptimisticUpdate `json:"data"`
 		}
 		update := &eventLightClientOptimisticUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)

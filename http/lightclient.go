@@ -21,12 +21,12 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/attestantio/go-eth2-client/api"
-	"github.com/attestantio/go-eth2-client/spec/capella"
+	"github.com/attestantio/go-eth2-client/spec/deneb"
 )
 
 // LightClientBootstrap provides the light client bootstrap of a given block ID.
 func (s *Service) LightClientBootstrap(ctx context.Context, opts *api.LightClientBootstrapOpts) (
-	*api.Response[*capella.LightClientBootstrap],
+	*api.Response[*deneb.LightClientBootstrap],
 	error,
 ) {
 	url := fmt.Sprintf("/eth/v1/beacon/light_client/bootstrap/%s", opts.Block)
@@ -39,12 +39,12 @@ func (s *Service) LightClientBootstrap(ctx context.Context, opts *api.LightClien
 	}
 
 	//if err := json.NewDecoder(bytes.NewReader(resp.body)).Decode(&resp); err != nil {
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientBootstrap{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), deneb.LightClientBootstrap{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client bootstrap")
 	}
 
-	return &api.Response[*capella.LightClientBootstrap]{
+	return &api.Response[*deneb.LightClientBootstrap]{
 		Data:     &data,
 		Metadata: metadata,
 	}, nil
@@ -52,7 +52,7 @@ func (s *Service) LightClientBootstrap(ctx context.Context, opts *api.LightClien
 
 // LightClientUpdates provides the light client update instances in the sync committee period range [startPeriod, startPeriod + count]
 func (s *Service) LightClientUpdates(ctx context.Context, opts *api.LightClientUpdatesOpts) (
-	*api.Response[[]*capella.LightClientUpdate],
+	*api.Response[[]*deneb.LightClientUpdate],
 	error,
 ) {
 	url := fmt.Sprintf("/eth/v1/beacon/light_client/updates?start_period=%d&count=%d", opts.StartPeriod, opts.Count)
@@ -64,12 +64,12 @@ func (s *Service) LightClientUpdates(ctx context.Context, opts *api.LightClientU
 		return nil, nil
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), []*capella.LightClientUpdate{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), []*deneb.LightClientUpdate{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client updates")
 	}
 
-	return &api.Response[[]*capella.LightClientUpdate]{
+	return &api.Response[[]*deneb.LightClientUpdate]{
 		Data:     data,
 		Metadata: metadata,
 	}, nil
@@ -77,7 +77,7 @@ func (s *Service) LightClientUpdates(ctx context.Context, opts *api.LightClientU
 
 // LightClientFinalityUpdate provides the latest light client finality_update
 func (s *Service) LightClientFinalityUpdate(ctx context.Context, opts *api.CommonOpts) (
-	*api.Response[*capella.LightClientFinalityUpdate],
+	*api.Response[*deneb.LightClientFinalityUpdate],
 	error,
 ) {
 	resp, err := s.get(ctx, "/eth/v1/beacon/light_client/finality_update", opts)
@@ -88,14 +88,14 @@ func (s *Service) LightClientFinalityUpdate(ctx context.Context, opts *api.Commo
 		return nil, nil
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientFinalityUpdate{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), deneb.LightClientFinalityUpdate{})
 	if err != nil {
 		//var resp lightClientFinalityUpdateJSON
 		//if err := json.NewDecoder(bytes.NewReader(resp.body)).Decode(&resp); err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client finality_update")
 	}
 
-	return &api.Response[*capella.LightClientFinalityUpdate]{
+	return &api.Response[*deneb.LightClientFinalityUpdate]{
 		Data:     &data,
 		Metadata: metadata,
 	}, nil
@@ -103,7 +103,7 @@ func (s *Service) LightClientFinalityUpdate(ctx context.Context, opts *api.Commo
 
 // LightClientOptimisticUpdate provides the latest light client optimistic_update
 func (s *Service) LightClientOptimisticUpdate(ctx context.Context, opts *api.CommonOpts) (
-	*api.Response[*capella.LightClientOptimisticUpdate],
+	*api.Response[*deneb.LightClientOptimisticUpdate],
 	error,
 ) {
 	resp, err := s.get(ctx, "/eth/v1/beacon/light_client/optimistic_update", opts)
@@ -114,12 +114,12 @@ func (s *Service) LightClientOptimisticUpdate(ctx context.Context, opts *api.Com
 		return nil, nil
 	}
 
-	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), capella.LightClientOptimisticUpdate{})
+	data, metadata, err := decodeJSONResponse(bytes.NewReader(resp.body), deneb.LightClientOptimisticUpdate{})
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse beacon light client optimistic_update")
 	}
 
-	return &api.Response[*capella.LightClientOptimisticUpdate]{
+	return &api.Response[*deneb.LightClientOptimisticUpdate]{
 		Data:     &data,
 		Metadata: metadata,
 	}, nil

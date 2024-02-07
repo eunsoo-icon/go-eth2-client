@@ -769,6 +769,11 @@ func (v *VersionedSignedBeaconBlock) BlockNumber() (uint64, error) {
 			return 0, errors.New("no capella block body")
 		}
 		return v.Capella.Message.Body.ExecutionPayload.BlockNumber, nil
+	case DataVersionDeneb:
+		if v.Deneb == nil {
+			return 0, errors.New("no deneb block body")
+		}
+		return v.Deneb.Message.Body.ExecutionPayload.BlockNumber, nil
 	default:
 		return 0, errors.New("unknown version")
 	}

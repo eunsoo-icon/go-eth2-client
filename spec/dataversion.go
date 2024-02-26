@@ -79,3 +79,7 @@ func (d DataVersion) String() string {
 
 	return dataVersionStrings[d]
 }
+
+func (d DataVersion) NotSupport(feature any) {
+	panic(fmt.Sprintf("%s does not support %+v", d, feature))
+}

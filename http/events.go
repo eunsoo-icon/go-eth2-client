@@ -30,9 +30,9 @@ import (
 
 	client "github.com/attestantio/go-eth2-client"
 	api "github.com/attestantio/go-eth2-client/api/v1"
+	"github.com/attestantio/go-eth2-client/spec"
 	"github.com/attestantio/go-eth2-client/spec/altair"
 	"github.com/attestantio/go-eth2-client/spec/capella"
-	"github.com/attestantio/go-eth2-client/spec/deneb"
 	"github.com/attestantio/go-eth2-client/spec/phase0"
 )
 
@@ -174,7 +174,7 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 		event.Data = contributionAndProofEvent
 	case "light_client_finality_update":
 		type eventLightClientFinalityUpdateJSON struct {
-			Data *deneb.LightClientFinalityUpdate `json:"data"`
+			Version spec.DataVersion `json:"version"`
 		}
 		update := &eventLightClientFinalityUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
@@ -182,10 +182,15 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
 			return
 		}
-		event.Data = update.Data
+		data, _, err := versionedLCFinalityUpdateFromJSON(update.Version, msg.Data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client finality update event")
+			return
+		}
+		event.Data = data
 	case "light_client_optimistic_update":
 		type eventLightClientOptimisticUpdateJSON struct {
-			Data *deneb.LightClientOptimisticUpdate `json:"data"`
+			Version spec.DataVersion `json:"version"`
 		}
 		update := &eventLightClientOptimisticUpdateJSON{}
 		err := json.Unmarshal(msg.Data, update)
@@ -193,7 +198,12 @@ func (s *Service) handleEvent(ctx context.Context, msg *sse.Event, handler clien
 			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
 			return
 		}
-		event.Data = update.Data
+		data, _, err := versionedLCOptimisticUpdateFromJSON(update.Version, msg.Data)
+		if err != nil {
+			log.Error().Err(err).RawJSON("data", msg.Data).Msg("Failed to parse light client optimistic update event")
+			return
+		}
+		event.Data = data
 	case "payload_attributes":
 		payloadAttributesEvent := &api.PayloadAttributesEvent{}
 		err := json.Unmarshal(msg.Data, payloadAttributesEvent)
